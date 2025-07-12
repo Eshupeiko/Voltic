@@ -49,6 +49,7 @@ The system uses a service-oriented approach with:
 - **Purpose**: Centralized configuration from environment variables
 - **Features**: Required variable validation, default values
 - **Security**: Handles sensitive credentials securely
+- **Google Sheets Support**: Optional GOOGLE_SHEETS_CSV_URL for external data source
 
 ### 5. Keep-Alive Service (`utils/keep_alive.py`)
 - **Purpose**: Prevents Replit from sleeping the application

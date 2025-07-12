@@ -6,6 +6,7 @@ Handles CSV file reading and data processing.
 import pandas as pd
 import logging
 import os
+import requests
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
 
@@ -18,6 +19,7 @@ class CSVManager:
         """Initialize CSV manager."""
         self.config = config
         self.csv_file_path = config.csv_file_path
+        self.google_sheets_csv_url = config.google_sheets_csv_url
         self.data_cache = None
         self.cache_time = None
         self.last_modified = None
@@ -41,14 +43,43 @@ class CSVManager:
         cache_expiry = self.cache_time + timedelta(minutes=self.config.cache_duration)
         return datetime.now() < cache_expiry
     
+    def _is_cache_valid_for_google_sheets(self) -> bool:
+        """Check if cached data is still valid for Google Sheets (no file modification check)."""
+        if not self.data_cache or not self.cache_time:
+            return False
+        
+        # Only check cache expiry for Google Sheets
+        cache_expiry = self.cache_time + timedelta(minutes=self.config.cache_duration)
+        return datetime.now() < cache_expiry
+    
     def get_knowledge_base(self) -> pd.DataFrame:
-        """Get knowledge base data from CSV file."""
+        """Get knowledge base data from CSV file or Google Sheets."""
         try:
-            # Return cached data if valid
+            # Try to load from Google Sheets first if URL is provided
+            if self.google_sheets_csv_url:
+                # Check if cached data is valid for Google Sheets
+                if self._is_cache_valid_for_google_sheets():
+                    logger.debug("Using cached knowledge base data from Google Sheets")
+                    return self.data_cache
+                
+                logger.info("Loading knowledge base from Google Sheets CSV URL")
+                try:
+                    df = self._load_from_google_sheets()
+                    # Cache the data
+                    self.data_cache = df
+                    self.cache_time = datetime.now()
+                    logger.info(f"Successfully loaded {len(df)} records from Google Sheets")
+                    return df
+                except Exception as e:
+                    logger.warning(f"Failed to load from Google Sheets: {str(e)}")
+                    logger.info("Falling back to local CSV file")
+            
+            # Return cached data if valid for local file
             if self._is_cache_valid():
                 logger.debug("Using cached knowledge base data")
                 return self.data_cache
             
+            # Fall back to local CSV file
             logger.info(f"Loading knowledge base from {self.csv_file_path}")
             
             # Check if file exists
@@ -85,6 +116,32 @@ class CSVManager:
         except Exception as e:
             logger.error(f"Failed to get knowledge base: {str(e)}")
             raise
+    
+    def _load_from_google_sheets(self) -> pd.DataFrame:
+        """Load knowledge base data from Google Sheets CSV URL."""
+        response = requests.get(self.google_sheets_csv_url, timeout=30)
+        response.raise_for_status()
+        
+        # Parse CSV from response content
+        from io import StringIO
+        df = pd.read_csv(StringIO(response.text))
+        
+        if df.empty:
+            logger.warning("Google Sheets CSV is empty")
+            return pd.DataFrame()
+        
+        # Expected columns: Category, Question, Answer, Priority, Last Updated
+        required_columns = ['Category', 'Question', 'Answer']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            logger.error(f"Missing required columns in Google Sheets: {missing_columns}")
+            raise ValueError(f"Missing required columns: {missing_columns}")
+        
+        # Clean and validate data
+        df = self._clean_data(df)
+        
+        return df
     
     def _clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Clean and validate the knowledge base data."""

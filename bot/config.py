@@ -18,6 +18,7 @@ class Config:
         
         # CSV file settings
         self.csv_file_path = os.getenv('CSV_FILE_PATH', 'knowledge_base.csv')
+        self.google_sheets_csv_url = os.getenv('GOOGLE_SHEETS_CSV_URL', '')
         
         # Optional settings with defaults
         self.max_results = int(os.getenv('MAX_SEARCH_RESULTS', '5'))
