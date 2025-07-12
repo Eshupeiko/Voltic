@@ -320,7 +320,21 @@ I couldn't find a good answer for: "{user_question}"
             logger.info("Bot is running and polling for updates...")
             
             # Keep the bot running
-            await self.application.updater.idle()
+            import signal
+            import asyncio
+            
+            # Create a future that will be resolved when a signal is received
+            stop_signals = (signal.SIGTERM, signal.SIGINT)
+            loop = asyncio.get_running_loop()
+            
+            for sig in stop_signals:
+                loop.add_signal_handler(sig, lambda s=sig: loop.stop())
+            
+            # Run until stopped
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                pass
             
         except Exception as e:
             logger.error(f"Error running bot: {str(e)}")
