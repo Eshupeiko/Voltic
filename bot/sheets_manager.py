@@ -26,7 +26,7 @@ class CSVManager:
     
     def _is_cache_valid(self) -> bool:
         """Check if cached data is still valid."""
-        if not self.data_cache or not self.cache_time:
+        if self.data_cache is None or not self.cache_time:
             return False
         
         # Check if file has been modified
@@ -45,7 +45,7 @@ class CSVManager:
     
     def _is_cache_valid_for_google_sheets(self) -> bool:
         """Check if cached data is still valid for Google Sheets (no file modification check)."""
-        if not self.data_cache or not self.cache_time:
+        if self.data_cache is None or not self.cache_time:
             return False
         
         # Only check cache expiry for Google Sheets
@@ -122,9 +122,23 @@ class CSVManager:
         response = requests.get(self.google_sheets_csv_url, timeout=30)
         response.raise_for_status()
         
-        # Parse CSV from response content
+        # Parse CSV from response content with error handling
         from io import StringIO
-        df = pd.read_csv(StringIO(response.text))
+        try:
+            # Try with different parameters to handle CSV formatting issues
+            df = pd.read_csv(StringIO(response.text), 
+                           on_bad_lines='skip',  # Skip problematic lines
+                           encoding='utf-8',
+                           quoting=1)  # Handle quoted fields
+        except Exception as e:
+            logger.warning(f"Failed to parse CSV with standard settings: {e}")
+            # Try with more relaxed settings
+            df = pd.read_csv(StringIO(response.text), 
+                           on_bad_lines='skip',
+                           encoding='utf-8',
+                           sep=',',
+                           quotechar='"',
+                           skipinitialspace=True)
         
         if df.empty:
             logger.warning("Google Sheets CSV is empty")
