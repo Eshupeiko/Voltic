@@ -1,16 +1,17 @@
 # Employee Knowledge Bot
 
-A free Python Telegram bot that answers employee questions using a Google Sheets knowledge base. Designed to run on Replit's free hosting environment.
+A free Python Telegram bot that answers employee questions using a CSV knowledge base (local file or Google Sheets). Designed to run on Replit's free hosting environment.
 
 ## Features
 
 - 🤖 **Telegram Bot Integration**: Responds to employee questions in real-time
-- 📊 **Google Sheets Backend**: Uses Google Sheets as a knowledge base
+- 📊 **Flexible Data Sources**: Supports both local CSV files and Google Sheets
 - 🔍 **Fuzzy String Matching**: Finds relevant answers even with typos or different phrasing
 - 📋 **Category Support**: Organizes questions by categories for better navigation
 - 🔄 **Auto-Caching**: Caches data to reduce API calls and improve performance
 - 🛡️ **Error Handling**: Graceful handling of API failures and edge cases
 - 📈 **Statistics**: Provides insights into knowledge base usage and content
+- 🔄 **Real-time Updates**: Google Sheets integration allows live updates without bot restart
 
 ## Setup Instructions
 

@@ -522,6 +522,7 @@ dependencies = [
     { name = "pandas" },
     { name = "python-levenshtein" },
     { name = "python-telegram-bot" },
+    { name = "requests" },
 ]
 
 [package.metadata]
@@ -534,6 +535,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.3.1" },
     { name = "python-levenshtein", specifier = ">=0.27.1" },
     { name = "python-telegram-bot", specifier = ">=22.2" },
+    { name = "requests", specifier = ">=2.32.4" },
 ]
 
 [[package]]
