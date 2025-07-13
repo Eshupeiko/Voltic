@@ -149,7 +149,7 @@ class TelegramBot:
             
             if "category_breakdown" in stats:
                 for category, count in stats["category_breakdown"].items():
-                    message += f"• {category}: {count} questions\n"
+                    message += f"• {category}: {count} вопрос\n"
             
             await update.message.reply_text(message, parse_mode='Markdown')
             
