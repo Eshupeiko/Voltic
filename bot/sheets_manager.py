@@ -119,26 +119,42 @@ class CSVManager:
     
     def _load_from_google_sheets(self) -> pd.DataFrame:
         """Load knowledge base data from Google Sheets CSV URL."""
+        # Set proper encoding for the request
         response = requests.get(self.google_sheets_csv_url, timeout=30)
         response.raise_for_status()
         
+        # Try to detect and fix encoding issues
+        content = response.content
+        
+        # Try different encodings
+        text_content = None
+        for encoding in ['utf-8', 'utf-8-sig', 'cp1251', 'latin1']:
+            try:
+                text_content = content.decode(encoding)
+                logger.info(f"Successfully decoded with {encoding} encoding")
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if text_content is None:
+            text_content = content.decode('utf-8', errors='replace')
+            logger.warning("Used utf-8 with error replacement")
+        
         # Debug: Log the raw response
-        logger.info(f"Raw response content (first 500 chars): {response.text[:500]}")
+        logger.info(f"Raw response content (first 500 chars): {text_content[:500]}")
         
         # Parse CSV from response content with error handling
         from io import StringIO
         try:
             # Try with different parameters to handle CSV formatting issues
-            df = pd.read_csv(StringIO(response.text), 
+            df = pd.read_csv(StringIO(text_content), 
                            on_bad_lines='skip',  # Skip problematic lines
-                           encoding='utf-8',
                            quoting=1)  # Handle quoted fields
         except Exception as e:
             logger.warning(f"Failed to parse CSV with standard settings: {e}")
             # Try with more relaxed settings
-            df = pd.read_csv(StringIO(response.text), 
+            df = pd.read_csv(StringIO(text_content), 
                            on_bad_lines='skip',
-                           encoding='utf-8',
                            sep=',',
                            quotechar='"',
                            skipinitialspace=True)
