@@ -5,7 +5,7 @@ channel = "stable-24_05"
 packages = ["glibcLocales"]
 
 [workflows]
-runButton = "Project"
+runButton = "Telegram Bot"
 
 [[workflows.workflow]]
 name = "Project"
