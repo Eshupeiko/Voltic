@@ -122,6 +122,9 @@ class CSVManager:
         response = requests.get(self.google_sheets_csv_url, timeout=30)
         response.raise_for_status()
         
+        # Debug: Log the raw response
+        logger.info(f"Raw response content (first 500 chars): {response.text[:500]}")
+        
         # Parse CSV from response content with error handling
         from io import StringIO
         try:
@@ -140,6 +143,12 @@ class CSVManager:
                            quotechar='"',
                            skipinitialspace=True)
         
+        # Debug: Log dataframe info
+        logger.info(f"Loaded DataFrame shape: {df.shape}")
+        logger.info(f"DataFrame columns: {list(df.columns)}")
+        if not df.empty:
+            logger.info(f"First few rows:\n{df.head()}")
+        
         if df.empty:
             logger.warning("Google Sheets CSV is empty")
             return pd.DataFrame()
@@ -150,6 +159,7 @@ class CSVManager:
         
         if missing_columns:
             logger.error(f"Missing required columns in Google Sheets: {missing_columns}")
+            logger.error(f"Available columns: {list(df.columns)}")
             raise ValueError(f"Missing required columns: {missing_columns}")
         
         # Clean and validate data
