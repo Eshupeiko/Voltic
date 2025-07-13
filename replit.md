@@ -106,3 +106,18 @@ The system uses a service-oriented approach with:
 - **Connection Pooling**: Reuses HTTP connections where possible
 
 The system prioritizes simplicity, cost-effectiveness, and reliability while providing intelligent question answering capabilities for employee support scenarios.
+
+## Recent Changes: Latest modifications with dates
+
+### 2025-07-13: Google Sheets Integration Complete
+- ✅ Added support for Google Sheets CSV URL integration
+- ✅ Fixed encoding issues with Russian text in Google Sheets
+- ✅ Improved error handling and fallback to local CSV
+- ✅ Added detailed logging for debugging data loading
+- ✅ Created comprehensive setup instructions for Google Sheets
+- ✅ Bot now successfully loads and matches questions from Google Sheets
+
+### User Preference Updates
+- Communication style: Simple, everyday language
+- Data source flexibility: Both local CSV and Google Sheets supported
+- Focus on free/minimal cost solutions
