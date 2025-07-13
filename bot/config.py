@@ -23,7 +23,7 @@ class Config:
         # Optional settings with defaults
         self.max_results = int(os.getenv('MAX_SEARCH_RESULTS', '5'))
         self.similarity_threshold = float(os.getenv('SIMILARITY_THRESHOLD', '60.0'))
-        self.cache_duration = int(os.getenv('CACHE_DURATION_MINUTES', '30'))
+        self.cache_duration = int(os.getenv('CACHE_DURATION_MINUTES', '1'))
         
         # Validate configuration
         self._validate_config()

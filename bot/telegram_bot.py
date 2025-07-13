@@ -45,7 +45,7 @@ class TelegramBot:
             # Message handler for questions
             self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_question))
             
-            logger.info("Telegram bot setup completed")
+            logger.info("Настройка бота Telegram завершена")
             
         except Exception as e:
             logger.error(f"Failed to setup Telegram bot: {str(e)}")
@@ -56,12 +56,12 @@ class TelegramBot:
         welcome_message = """
 🤖 **Employee Knowledge Bot**
 
-Hello! I'm here to help you find answers to your work-related questions.
+Привет!Я Voltic - твой цифровой напарник-электромонтер! ✨
 
-**How to use me:**
-• Just type your question and I'll search our knowledge base
-• Use /categories to see available topics
-• Use /help for more information
+**Как со мной работать:**
+• Просто введи свой вопрос, и я поищу информацию в нашей базе знаний.
+• Используйте /categories, чтобы увидеть доступные темы.
+• Используйте /help, чтобы получить дополнительную информацию.
 
 **Examples:**
 • "How do I request time off?"
