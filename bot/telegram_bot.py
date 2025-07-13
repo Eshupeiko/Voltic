@@ -75,29 +75,28 @@ class TelegramBot:
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /help command."""
         help_message = """
-📚 **Available Commands:**
+📚 **Доступные команды:**
 
-/start - Welcome message and instructions
-/help - Show this help message
-/categories - View available question categories
-/stats - Show knowledge base statistics
-/refresh - Refresh the knowledge base cache
+/start - приветственное сообщение и инструкции
+/help - справочное сообщение
+/categories - список категорий
+/stats - показать статистику базы знаний
+/refresh - обновить кэш базы знаний
 
-**How to ask questions:**
-Just type your question naturally! I'll search for the most relevant answers using fuzzy matching.
+**Как задавать вопросы:**
+Просто введите и отправьте свой вопрос в поле для ввода текста! Я найду наиболее релевантные ответы, используя возможные соответствия.
 
-**Tips for better results:**
-• Use clear, specific questions
-• Include relevant keywords
-• Try different phrasings if you don't get good results
+**Советы для достижения наилучших результатов:**
+• Задавайте четкие и конкретные вопросы
+• Используйте релевантные ключевые слова
+• Попробуйте другие формулировки, если результаты неудовлетворительны
 
-**Example questions:**
-• "vacation policy"
-• "how to submit expenses"
-• "IT support contact"
-• "meeting room booking"
+**Примеры вопросов:**
+• "Напиши закон Ома"
+• "Формула для расчета мощности электродвигателя"
+• "Какая допустимая перегрузка электродвигателя?"
 
-If you can't find what you're looking for, try rephrasing your question or contact HR directly.
+Если вы не нашли то, что искали, попробуйте перефразировать свой вопрос и я обязательно помогу тебе!
         """
         
         await update.message.reply_text(help_message, parse_mode='Markdown')
