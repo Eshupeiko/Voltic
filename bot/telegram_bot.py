@@ -108,7 +108,7 @@ class TelegramBot:
             categories = self.question_matcher.get_categories(knowledge_base)
             
             if not categories:
-                await update.message.reply_text("No categories available at the moment.")
+                await update.message.reply_text("На данный момент категории недоступны.")
                 return
             
             # Create inline keyboard with categories
@@ -121,12 +121,12 @@ class TelegramBot:
             
             reply_markup = InlineKeyboardMarkup(keyboard)
             
-            message = "📋 **Available Categories:**\n\nClick on a category to browse questions:"
+            message = "📋 **Доступные категории:**\n\nНажмите на категорию, чтобы просмотреть вопросы:"
             await update.message.reply_text(message, reply_markup=reply_markup, parse_mode='Markdown')
             
         except Exception as e:
             logger.error(f"Error in categories command: {str(e)}")
-            await update.message.reply_text("Sorry, I couldn't retrieve the categories right now. Please try again later.")
+            await update.message.reply_text("Извините, мне не удалось получить категории прямо сейчас. Попробуйте позже.")
     
     async def stats_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /stats command."""
@@ -134,17 +134,17 @@ class TelegramBot:
             stats = self.csv_manager.get_stats()
             
             if "error" in stats:
-                await update.message.reply_text("Sorry, I couldn't retrieve the statistics right now.")
+                await update.message.reply_text("Извините, я не смог сейчас получить статистику.")
                 return
             
             message = f"""
-📊 **Knowledge Base Statistics:**
+📊 **Статистика базы знаний:**
 
-• Total Questions: {stats.get('total_questions', 0)}
-• Categories: {stats.get('categories', 0)}
-• Last Updated: {stats.get('last_updated', 'Unknown')}
+• Всего вопросов: {stats.get('total_questions', 0)}
+• Категории: {stats.get('categories', 0)}
+• Последнее обновление: {stats.get('last_updated', 'Unknown')}
 
-**Category Breakdown:**
+**Разбивка по категориям:**
             """
             
             if "category_breakdown" in stats:
@@ -155,12 +155,12 @@ class TelegramBot:
             
         except Exception as e:
             logger.error(f"Error in stats command: {str(e)}")
-            await update.message.reply_text("Sorry, I couldn't retrieve the statistics right now. Please try again later.")
+            await update.message.reply_text("Извините, мне не удалось получить статистику прямо сейчас. Попробуйте позже.")
     
     async def refresh_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /refresh command."""
         try:
-            await update.message.reply_text("🔄 Refreshing knowledge base...")
+            await update.message.reply_text("🔄 Обновление базы знаний...")
             
             self.csv_manager.refresh_cache()
             
