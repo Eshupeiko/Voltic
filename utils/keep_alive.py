@@ -3,6 +3,7 @@ Keep-alive mechanism for Replit free hosting.
 Creates a simple HTTP server to prevent the application from sleeping.
 """
 
+import os
 import logging
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
