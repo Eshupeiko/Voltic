@@ -1,6 +1,5 @@
 """
-Telegram bot implementation for employee knowledge base.
-Handles user interactions and provides answers from Google Sheets.
+Телеграм-бот помощник электромонтера.
 """
 
 import logging
@@ -19,7 +18,7 @@ class TelegramBot:
     """Main Telegram bot class."""
     
     def __init__(self, config):
-        """Initialize the Telegram bot."""
+        """Инициализация Telegram-бота."""
         self.config = config
         self.csv_manager = CSVManager(config)
         self.question_matcher = QuestionMatcher(config)
@@ -27,12 +26,12 @@ class TelegramBot:
         self._setup_bot()
     
     def _setup_bot(self):
-        """Setup the Telegram bot application."""
+        """Настройка приложения Telegram-бот."""
         try:
-            # Create application
+            # Добавить приложение
             self.application = Application.builder().token(self.config.telegram_token).build()
             
-            # Add handlers
+            # Добавить обработчики
             self.application.add_handler(CommandHandler("start", self.start_command))
             self.application.add_handler(CommandHandler("help", self.help_command))
             self.application.add_handler(CommandHandler("categories", self.categories_command))
@@ -48,7 +47,7 @@ class TelegramBot:
             logger.info("Настройка бота Telegram завершена")
             
         except Exception as e:
-            logger.error(f"Failed to setup Telegram bot: {str(e)}")
+            logger.error(f"Не удалось настроить Telegram-бот: {str(e)}")
             raise
     
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -61,11 +60,6 @@ class TelegramBot:
 • Просто введи свой вопрос, и я поищу информацию в нашей базе знаний.
 • Используйте /categories, чтобы увидеть доступные темы.
 • Используйте /help, чтобы получить дополнительную информацию.
-
-**Например:**
-• "Напиши мне закон ОМА"
-• "Как рассчитать силу тока?"
-• "Какое напряжение в домашней розетке?"
 
 Давай попробуем, это просто!  🚀
         """
@@ -125,7 +119,7 @@ class TelegramBot:
             await update.message.reply_text(message, reply_markup=reply_markup, parse_mode='Markdown')
             
         except Exception as e:
-            logger.error(f"Error in categories command: {str(e)}")
+            logger.error(f"Ошибка в команде категорий: {str(e)}")
             await update.message.reply_text("Извините, мне не удалось получить категории прямо сейчас. Попробуйте позже.")
     
     async def stats_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -154,7 +148,7 @@ class TelegramBot:
             await update.message.reply_text(message, parse_mode='Markdown')
             
         except Exception as e:
-            logger.error(f"Error in stats command: {str(e)}")
+            logger.error(f"Ошибка в команде статистики: {str(e)}")
             await update.message.reply_text("Извините, мне не удалось получить статистику прямо сейчас. Попробуйте позже.")
     
     async def refresh_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -164,11 +158,11 @@ class TelegramBot:
             
             self.csv_manager.refresh_cache()
             
-            await update.message.reply_text("✅ Knowledge base refreshed successfully!")
+            await update.message.reply_text("✅ База знаний успешно обновлена!")
             
         except Exception as e:
-            logger.error(f"Error in refresh command: {str(e)}")
-            await update.message.reply_text("❌ Failed to refresh knowledge base. Please try again later.")
+            logger.error(f"Ошибка в команде обновления: {str(e)}")
+            await update.message.reply_text("❌ Не удалось обновить базу знаний. Повторите попытку позже.")
     
     async def button_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle button callbacks."""
@@ -188,25 +182,25 @@ class TelegramBot:
                 ]
                 
                 if category_questions.empty:
-                    await query.edit_message_text(f"No questions found in category: {category}")
+                    await query.edit_message_text(f"В категории не найдено вопросов: {category}")
                     return
                 
                 # Show questions in this category
-                message = f"📋 **Questions in {category}:**\n\n"
+                message = f"📋 **Вопросы в {category}:**\n\n"
                 
                 for idx, row in category_questions.head(10).iterrows():
                     message += f"• {row['Question']}\n"
                 
                 if len(category_questions) > 10:
-                    message += f"\n... and {len(category_questions) - 10} more questions"
+                    message += f"\n... и {len(category_questions) - 10} еще вопросы"
                 
-                message += "\n\nJust type your question to get an answer!"
+                message += "\n\nПросто введите свой вопрос и получите ответ!"
                 
                 await query.edit_message_text(message, parse_mode='Markdown')
                 
         except Exception as e:
-            logger.error(f"Error in button callback: {str(e)}")
-            await query.edit_message_text("Sorry, something went wrong. Please try again.")
+            logger.error(f"Ошибка в кнопке обратного вызова: {str(e)}")
+            await query.edit_message_text("Извините, что-то пошло не так. Попробуйте ещё раз.")
     
     async def handle_question(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle user questions."""
@@ -214,7 +208,7 @@ class TelegramBot:
         user_id = update.effective_user.id
         username = update.effective_user.username or "Unknown"
         
-        logger.info(f"Question from user {username} ({user_id}): {user_question}")
+        logger.info(f"Вопрос от пользователя {username} ({user_id}): {user_question}")
         
         try:
             # Get knowledge base
@@ -222,7 +216,7 @@ class TelegramBot:
             
             if knowledge_base.empty:
                 await update.message.reply_text(
-                    "Sorry, the knowledge base is currently empty. Please try again later or contact support."
+                    "Извините, база знаний сейчас пуста или обновляется.Попробуйте обратится немного позже."
                 )
                 return
             
@@ -243,9 +237,9 @@ class TelegramBot:
                 await self._send_alternative_answers(update, matches[1:])
                 
         except Exception as e:
-            logger.error(f"Error handling question: {str(e)}")
+            logger.error(f"Вопрос об обработке ошибок: {str(e)}")
             await update.message.reply_text(
-                "Sorry, I encountered an error while searching for your answer. Please try again later."
+                "Извините, при поиске ответа произошла ошибка. Повторите попытку позже."
             )
     
     async def _send_answer(self, update: Update, match: Dict, total_matches: int):
@@ -253,15 +247,16 @@ class TelegramBot:
         answer_message = f"""
 🎯 **Вот что мне удалось найти!** (Score: {match['score']}%)
 
-**Твой вопрос:** {match['question']}
 
 **Найденный ответ:** {match['answer']}
 
 **Категория:** {match['category']}
         """
-        
+
+        #**Твой вопрос:** {match['question']}
+
         if total_matches > 1:
-            answer_message += f"\n💡 Found {total_matches} related answers"
+            answer_message += f"\n💡 Найденный {total_matches} похожие ответы"
         
         await update.message.reply_text(answer_message, parse_mode='Markdown')
     
@@ -274,7 +269,7 @@ class TelegramBot:
         
         for i, alt in enumerate(alternatives[:3], 1):  # Show max 3 alternatives
             alt_message += f"**{i}.** {alt['question']}\n"
-            alt_message += f"*Score: {alt['score']}%*\n\n"
+            alt_message += f"*Совпадение: {alt['score']}%*\n\n"
         
         alt_message += "Введите более конкретный вопрос, чтобы получить точный ответ, который вам нужен!"
         
