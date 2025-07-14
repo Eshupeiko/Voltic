@@ -1,6 +1,6 @@
 """
-Question matching logic using fuzzy string matching.
-Finds the most relevant answers based on user questions.
+Логика сопоставления вопросов с использованием нечёткого сопоставления строк.
+Находит наиболее релевантные ответы на основе вопросов пользователей.
 """
 
 import pandas as pd
