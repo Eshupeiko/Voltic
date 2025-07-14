@@ -274,9 +274,13 @@ class TelegramBot:
         alt_message += "Введите более конкретный вопрос, чтобы получить точный ответ, который вам нужен!"
         
         await update.message.reply_text(alt_message, parse_mode='Markdown')
-    
+
     async def _send_no_matches_response(self, update: Update, user_question: str):
         """Send response when no matches are found."""
+        user_id = update.effective_user.id
+        username = update.effective_user.username or "Unknown"
+        # Логируем вопрос в CSV
+        self.csv_manager.log_unanswered_question(user_question, user_id, username)
         no_match_message = f"""
 🤔 **Хммм...Что-то я не смог найти хороший ответ на твой вопрос: "{user_question}"**
 
@@ -285,7 +289,7 @@ class TelegramBot:
 • Используйте более конкретные термины;
 • Проверьте доступные категории с помощью /categories.
         """
-        
+
         await update.message.reply_text(no_match_message, parse_mode='Markdown')
     
     async def run(self):

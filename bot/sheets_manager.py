@@ -116,6 +116,22 @@ class CSVManager:
         except Exception as e:
             logger.error(f"Failed to get knowledge base: {str(e)}")
             raise
+
+    def log_unanswered_question(self, user_question: str, user_id=None, username=None):
+        """Записывает вопросы без ответа в CSV."""
+        words = user_question.split()
+        if len(words) < 3:
+            return  # Не записываем короткие вопросы
+
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        try:
+            with open("unanswered_questions.csv", "a", encoding="utf-8") as f:
+                f.write(f'"{timestamp}","{user_id}","{username or "Unknown"}","{user_question}"\n')
+            logger.info(f"Вопрос записан: '{user_question}'")
+        except Exception as e:
+            logger.error(f"Не удалось записать вопрос в CSV: {str(e)}")
     
     def _load_from_google_sheets(self) -> pd.DataFrame:
         """Load knowledge base data from Google Sheets CSV URL."""
