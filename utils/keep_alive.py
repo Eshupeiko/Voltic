@@ -62,8 +62,8 @@ class KeepAliveHandler(BaseHTTPRequestHandler):
 def run_server():
     """Run the keep-alive server."""
     try:
-        server = HTTPServer(('0.0.0.0', 5000), KeepAliveHandler)
-        logger.info("Keep-alive server started on port 5000")
+        server = HTTPServer(('0.0.0.0', 3000), KeepAliveHandler)
+        logger.info("Keep-alive server started on port 3000")
         server.serve_forever()
     except Exception as e:
         logger.error(f"Keep-alive server error: {str(e)}")
