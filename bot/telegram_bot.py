@@ -245,7 +245,7 @@ class TelegramBot:
     async def _send_answer(self, update: Update, match: Dict, total_matches: int):
         """Send the answer to the user."""
         answer_message = f"""
-🎯 **Вот что мне удалось найти!** (Score: {match['score']}%)
+🎯 **Вот что мне удалось найти!** (Совпадение: {match['score']}%)
 
 
 **Найденный ответ:** {match['answer']}
@@ -256,7 +256,7 @@ class TelegramBot:
         #**Твой вопрос:** {match['question']}
 
         if total_matches > 1:
-            answer_message += f"\n💡 Найденный {total_matches} похожие ответы"
+            answer_message += f"\n💡 Найдены {total_matches} похожих ответа"
         
         await update.message.reply_text(answer_message, parse_mode='Markdown')
     
@@ -265,7 +265,7 @@ class TelegramBot:
         if not alternatives:
             return
         
-        alt_message = "🔍 **Другие похожие ответы:**\n\n"
+        alt_message = "🔍 **Другие похожие вопросы:**\n\n"
         
         for i, alt in enumerate(alternatives[:3], 1):  # Show max 3 alternatives
             alt_message += f"**{i}.** {alt['question']}\n"
