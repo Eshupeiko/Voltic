@@ -251,13 +251,13 @@ class TelegramBot:
     async def _send_answer(self, update: Update, match: Dict, total_matches: int):
         """Send the answer to the user."""
         answer_message = f"""
-🎯 **Answer Found** (Score: {match['score']}%)
+🎯 **Вот что мне удалось найти!** (Score: {match['score']}%)
 
-**Question:** {match['question']}
+**Твой вопрос:** {match['question']}
 
-**Answer:** {match['answer']}
+**Найденный ответ:** {match['answer']}
 
-**Category:** {match['category']}
+**Категория:** {match['category']}
         """
         
         if total_matches > 1:
