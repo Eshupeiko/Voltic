@@ -270,25 +270,32 @@ class TelegramBot:
         if not alternatives:
             return
         
-        alt_message = "🔍 **Другие похожие ответы:**\n\n"
+        alt_message = "🔍 **Other related answers:**\n\n"
         
         for i, alt in enumerate(alternatives[:3], 1):  # Show max 3 alternatives
             alt_message += f"**{i}.** {alt['question']}\n"
             alt_message += f"*Score: {alt['score']}%*\n\n"
         
-        alt_message += "Введите более конкретный вопрос, чтобы получить точный ответ, который вам нужен!"
+        alt_message += "Type a more specific question to get the exact answer you need!"
         
         await update.message.reply_text(alt_message, parse_mode='Markdown')
     
     async def _send_no_matches_response(self, update: Update, user_question: str):
         """Send response when no matches are found."""
         no_match_message = f"""
-🤔 **Хммм...Что-то я не смог найти хороший ответ на твой вопрос: "{user_question}"**
+🤔 **No direct matches found**
 
-**👉Попробуйте следующие варианты:**
-• Перефразируйте свой вопрос, используя другие ключевые слова;
-• Используйте более конкретные термины;
-• Проверьте доступные категории с помощью /categories.
+I couldn't find a good answer for: "{user_question}"
+
+**Try these suggestions:**
+• Rephrase your question with different keywords
+• Use more specific terms
+• Check available categories with /categories
+• Contact HR or IT support directly
+
+**Example rephrasing:**
+• Instead of "time off" try "vacation policy" or "leave request"
+• Instead of "computer problem" try "IT support" or "technical issue"
         """
         
         await update.message.reply_text(no_match_message, parse_mode='Markdown')
