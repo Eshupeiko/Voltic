@@ -251,7 +251,7 @@ class TelegramBot:
 {match['answer']}
 
 **Категория:** {match['category']}
-** (Совпадение: {match['score']}%)
+**(Совпадение: {match['score']}%)
         """
 
         #**Твой вопрос:** {match['question']}

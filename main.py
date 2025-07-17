@@ -23,7 +23,7 @@ def main():
         logger.info("Configuration loaded successfully")
         
         # Start keep-alive server for Replit
-        keep_alive()
+        #keep_alive()
         
         # Create and start the Telegram bot
         bot = TelegramBot(config)
