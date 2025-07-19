@@ -3,6 +3,7 @@ CSV file manager for the knowledge base.
 Handles CSV file reading and data processing.
 """
 
+import asyncio
 import pandas as pd
 import logging
 import os
