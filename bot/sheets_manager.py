@@ -130,6 +130,15 @@ class CSVManager:
             with open("unanswered_questions.csv", "a", encoding="utf-8") as f:
                 f.write(f'"{timestamp}","{user_id}","{username or "Unknown"}","{user_question}"\n')
             logger.info(f"Вопрос записан: '{user_question}'")
+            # Вызываем скрипт обновления GitHub
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(upload_unanswered_to_github())
+                else:
+                    loop.run_until_complete(upload_unanswered_to_github())
+            except Exception as e:
+                logger.error(f"Ошибка при вызове upload_unanswered_to_github: {str(e)}")
         except Exception as e:
             logger.error(f"Не удалось записать вопрос в CSV: {str(e)}")
     
