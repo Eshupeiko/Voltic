@@ -1,9 +1,9 @@
+import tempfile
 import pandas as pd
 import logging
 import os
 import requests
 import asyncio  # <-- Добавь эту строку
-from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
