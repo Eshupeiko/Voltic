@@ -1,10 +1,10 @@
-import os
-import git
-import shutil  # ✅ Добавлена строка
-import logging
-import asyncio
 import tempfile
-from datetime import datetime
+import pandas as pd
+import logging
+import os
+import requests
+import asyncio  # <-- Добавь эту строку
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
