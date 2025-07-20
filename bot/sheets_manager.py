@@ -10,6 +10,7 @@ import os
 import requests
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
+from scripts.upload_unanswered import upload_unanswered_to_github
 
 logger = logging.getLogger(__name__)
 
