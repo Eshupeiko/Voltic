@@ -1,16 +1,16 @@
 """
 Телеграм-бот помощник электромонтера.
 """
+import os
+os.environ["HTTP_PROXY"] = ""
+os.environ["HTTPS_PROXY"] = ""
+os.environ["NO_PROXY"] = "*"
 
 import logging #Модуль стандартной библиотеки Python для логирования событий
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ContextTypes
 from typing import List, Dict
 from groq import Groq
-import os
-os.environ["HTTP_PROXY"] = ""
-os.environ["HTTPS_PROXY"] = ""
-os.environ["NO_PROXY"] = "*"
 
 
 from .sheets_manager import CSVManager
