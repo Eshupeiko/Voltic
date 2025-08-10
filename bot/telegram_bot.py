@@ -23,8 +23,8 @@ class TelegramBot:
         self.config = config
         self.csv_manager = CSVManager(config)
         self.question_matcher = QuestionMatcher(config)
-        #self.application = None
-        #self._setup_bot()
+        self.application = None
+        self._setup_bot()
         # Инициализация Groq клиента
         self.groq_api_key = config.groq_api_key or os.getenv("GROQ_API_KEY")
         self.groq_client = None
