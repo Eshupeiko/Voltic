@@ -31,10 +31,7 @@ class TelegramBot:
         self.groq_client = None
         if self.groq_api_key:
             try:
-                self.groq_client = Groq(
-                    api_key=self.groq_api_key,
-                    http_client=httpx.Client(proxies=None)  # Отключаем прокси
-                )
+                self.groq_client = Groq(api_key=self.groq_api_key)
                 logger.info("Groq API успешно инициализирован")
 
                         # Проверка доступных моделей
