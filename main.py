@@ -12,7 +12,7 @@ from utils.logger import setup_logging
 from utils.keep_alive import keep_alive
 
 def main():
-    """Main function to start the Telegram bot."""
+    """Основная функция запуска Telegram-бота"""
     # Setup logging
     setup_logging()
     logger = logging.getLogger(__name__)

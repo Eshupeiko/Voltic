@@ -12,26 +12,26 @@ import re
 logger = logging.getLogger(__name__)
 
 class QuestionMatcher:
-    """Handles fuzzy matching of user questions to knowledge base."""
+    """Обеспечивает нечеткое сопоставление вопросов пользователей с базой знаний."""
     
     def __init__(self, config):
-        """Initialize question matcher."""
+        """Инициализировать сопоставитель вопросов."""
         self.config = config
         self.similarity_threshold = config.similarity_threshold
         self.max_results = config.max_results
     
     def find_matches(self, user_question: str, knowledge_base: pd.DataFrame) -> List[Dict]:
-        """Find matching questions in the knowledge base."""
+        """Найти соответствующие вопросы в базе знаний."""
         try:
             if knowledge_base.empty:
-                logger.warning("Knowledge base is empty")
+                logger.warning("База знаний пуста")
                 return []
             
             # Clean user question
             cleaned_question = self._clean_question(user_question)
             
             if not cleaned_question:
-                logger.warning("User question is empty after cleaning")
+                logger.warning("Вопрос пользователя пуст после очистки")
                 return []
             
             # Get all questions from knowledge base

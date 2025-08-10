@@ -15,7 +15,7 @@ class Config:
     def __init__(self):
         """Initialize configuration from environment variables."""
         self.telegram_token = self._get_required_env('TELEGRAM_BOT_TOKEN')
-        
+        self.groq_api_key = os.getenv("GROQ_API_KEY", "")
         # CSV file settings
         self.csv_file_path = os.getenv('CSV_FILE_PATH', 'knowledge_base.csv')
         self.google_sheets_csv_url = os.getenv('GOOGLE_SHEETS_CSV_URL', '')
@@ -27,7 +27,7 @@ class Config:
         
         # Validate configuration
         self._validate_config()
-        
+
     def _get_required_env(self, key: str) -> str:
         """Get required environment variable or raise exception."""
         value = os.getenv(key)
@@ -44,3 +44,4 @@ class Config:
             raise ValueError("MAX_SEARCH_RESULTS must be at least 1")
             
         logger.info("Configuration validation passed")
+

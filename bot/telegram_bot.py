@@ -2,12 +2,13 @@
 Телеграм-бот помощник электромонтера.
 """
 
-import logging
+import logging #Модуль стандартной библиотеки Python для логирования событий
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ContextTypes
 from typing import List, Dict
-import asyncio
-from datetime import datetime
+from groq import Groq
+import os
+
 
 from .sheets_manager import CSVManager
 from .question_matcher import QuestionMatcher
@@ -22,6 +23,18 @@ class TelegramBot:
         self.config = config
         self.csv_manager = CSVManager(config)
         self.question_matcher = QuestionMatcher(config)
+        #self.application = None
+        #self._setup_bot()
+        # Инициализация Groq клиента
+        self.groq_api_key = config.groq_api_key or os.getenv("GROQ_API_KEY")
+        self.groq_client = None
+        if self.groq_api_key:
+            try:
+                self.groq_client = Groq(api_key=self.groq_api_key)
+                logger.info("Groq API успешно инициализирован")
+            except Exception as e:
+                logger.error(f"Не удалось инициализировать Groq API: {str(e)}")
+
         self.application = None
         self._setup_bot()
     
@@ -65,6 +78,27 @@ class TelegramBot:
         """
         
         await update.message.reply_text(welcome_message, parse_mode='Markdown')
+
+    async def get_groq_response(self, user_question: str) -> str:
+        """Получить ответ от Groq API."""
+        if not self.groq_client:
+            return "Извините, сервис ИИ временно недоступен."
+
+        try:
+            chat_completion = self.groq_client.chat.completions.create(
+                messages=[
+                    {"role": "system",
+                     "content": "Ты - профессиональный помощник электромонтера. Отвечай на вопросы по электротехнике точно, кратко и по делу на русском языке. Если вопрос не относится к электротехнике, вежливо откажись отвечать."},
+                    {"role": "user", "content": user_question}
+                ],
+                model="llama3-70b-8192",  # Мощная модель для сложных вопросов
+                temperature=0.3,  # Низкая температура для более точных технических ответов
+                max_tokens=512
+            )
+            return chat_completion.choices[0].message.content
+        except Exception as e:
+            logger.error(f"Ошибка при запросе к Groq API: {str(e)}")
+            return "Извините, произошла ошибка при обработке вашего запроса."
     
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /help command."""
@@ -277,23 +311,31 @@ class TelegramBot:
         await update.message.reply_text(alt_message, parse_mode='Markdown')
 
     async def _send_no_matches_response(self, update: Update, user_question: str):
-        """Send response when no matches are found."""
+        """Send response when no matches are found and use Groq API to get an answer."""
         user_id = update.effective_user.id
         username = update.effective_user.username or "Unknown"
-        # Логируем вопрос в CSV
+
+        # Логируем вопрос в CSV как неотвеченный
         self.csv_manager.log_unanswered_question(user_question, user_id, username)
-        no_match_message = f"""
-**Хммм… Похоже, я пока не могу найти хороший ответ на твой вопрос: "{user_question}" 😕**
-Но не расстраивайся! Вот что ты можешь попробовать:
 
-👉 Переформулируй вопрос , используя другие слова или примеры.
-👉 Уточни детали — возможно, стоит использовать более конкретные термины.
+        # Отправляем сообщение о том, что ищем ответ через ИИ
+        await update.message.reply_text("🔍 Не найдено в базе знаний... Запрашиваю у ИИ-помощника...")
 
+        # Получаем ответ от Groq
+        ai_response = await self.get_groq_response(user_question)
 
-А ещё, дай мне немного времени — возможно совсем скоро я научусь отвечать и на такие вопросы! 🚀
+        # Сохраняем новый вопрос и ответ в CSV
+        self.csv_manager.add_question_answer(user_question, ai_response, "AI_Generated")
+
+        # Формируем и отправляем ответ пользователю
+        response_message = f"""
+    🤖 **Ответ от ИИ-помощника:**
+    {ai_response}
+
+    💡 Этот ответ был сгенерирован и добавлен в нашу базу знаний.
+    Если ответ неточный или неполный, пожалуйста, уточните свой вопрос.
         """
-
-        await update.message.reply_text(no_match_message, parse_mode='Markdown')
+        await update.message.reply_text(response_message, parse_mode='Markdown')
     
     async def run(self):
         """Start the bot."""

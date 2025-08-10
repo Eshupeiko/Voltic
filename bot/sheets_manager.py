@@ -198,6 +198,29 @@ class CSVManager:
         df = self._clean_data(df)
         
         return df
+
+    def add_question_answer(self, question: str, answer: str, category: str = "AI_Generated"):
+        """Добавить новый вопрос и ответ в CSV файл."""
+        try:
+            # Создаем новую запись
+            new_entry = {
+                'Question': question,
+                'Answer': answer,
+                'Category': category,
+                'Source': 'AI_Generated'
+            }
+
+            # Добавляем в CSV
+            self.append_to_csv(new_entry)
+
+            # Обновляем кэш
+            self.refresh_cache()
+
+            logger.info(f"Добавлен новый вопрос в CSV: {question[:50]}...")
+            return True
+        except Exception as e:
+            logger.error(f"Ошибка при добавлении вопроса в CSV: {str(e)}")
+            return False
     
     def _clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Clean and validate the knowledge base data."""
