@@ -15,6 +15,7 @@ class Config:
     def __init__(self):
         """Initialize configuration from environment variables."""
         self.telegram_token = self._get_required_env('TELEGRAM_BOT_TOKEN')
+        self.groq_api_key = os.getenv("GROQ_API_KEY", "")
         
         # CSV file settings
         self.csv_file_path = os.getenv('CSV_FILE_PATH', 'knowledge_base.csv')

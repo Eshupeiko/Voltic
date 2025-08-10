@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class CSVManager:
     """Manages CSV file integration for knowledge base."""
-    
+
     def __init__(self, config):
         """Initialize CSV manager."""
         self.config = config
@@ -23,35 +23,35 @@ class CSVManager:
         self.data_cache = None
         self.cache_time = None
         self.last_modified = None
-    
+
     def _is_cache_valid(self) -> bool:
         """Check if cached data is still valid."""
         if self.data_cache is None or not self.cache_time:
             return False
-        
+
         # Check if file has been modified
         if not os.path.exists(self.csv_file_path):
             return False
-        
+
         file_modified = datetime.fromtimestamp(os.path.getmtime(self.csv_file_path))
-        
+
         # If file was modified after cache, invalidate cache
         if self.last_modified and file_modified > self.last_modified:
             return False
-        
+
         # Check cache expiry
         cache_expiry = self.cache_time + timedelta(minutes=self.config.cache_duration)
         return datetime.now() < cache_expiry
-    
+
     def _is_cache_valid_for_google_sheets(self) -> bool:
         """Check if cached data is still valid for Google Sheets (no file modification check)."""
         if self.data_cache is None or not self.cache_time:
             return False
-        
+
         # Only check cache expiry for Google Sheets
         cache_expiry = self.cache_time + timedelta(minutes=self.config.cache_duration)
         return datetime.now() < cache_expiry
-    
+
     def get_knowledge_base(self) -> pd.DataFrame:
         """Get knowledge base data from CSV file or Google Sheets."""
         try:
@@ -61,7 +61,7 @@ class CSVManager:
                 if self._is_cache_valid_for_google_sheets():
                     logger.debug("Using cached knowledge base data from Google Sheets")
                     return self.data_cache
-                
+
                 logger.info("Loading knowledge base from Google Sheets CSV URL")
                 try:
                     df = self._load_from_google_sheets()
@@ -73,46 +73,46 @@ class CSVManager:
                 except Exception as e:
                     logger.warning(f"Failed to load from Google Sheets: {str(e)}")
                     logger.info("Falling back to local CSV file")
-            
+
             # Return cached data if valid for local file
             if self._is_cache_valid():
                 logger.debug("Using cached knowledge base data")
                 return self.data_cache
-            
+
             # Fall back to local CSV file
             logger.info(f"Loading knowledge base from {self.csv_file_path}")
-            
+
             # Check if file exists
             if not os.path.exists(self.csv_file_path):
                 logger.error(f"CSV file not found: {self.csv_file_path}")
                 return pd.DataFrame()
-            
+
             # Read CSV file
             df = pd.read_csv(self.csv_file_path)
-            
+
             if df.empty:
                 logger.warning("CSV file is empty")
                 return pd.DataFrame()
-            
+
             # Expected columns: Category, Question, Answer, Priority, Last Updated
             required_columns = ['Category', 'Question', 'Answer']
             missing_columns = [col for col in required_columns if col not in df.columns]
-            
+
             if missing_columns:
                 logger.error(f"Missing required columns in CSV: {missing_columns}")
                 raise ValueError(f"Missing required columns: {missing_columns}")
-            
+
             # Clean and validate data
             df = self._clean_data(df)
-            
+
             # Cache the data
             self.data_cache = df
             self.cache_time = datetime.now()
             self.last_modified = datetime.fromtimestamp(os.path.getmtime(self.csv_file_path))
-            
+
             logger.info(f"Successfully loaded {len(df)} records from knowledge base")
             return df
-            
+
         except Exception as e:
             logger.error(f"Failed to get knowledge base: {str(e)}")
             raise
@@ -132,16 +132,16 @@ class CSVManager:
             logger.info(f"Вопрос записан: '{user_question}'")
         except Exception as e:
             logger.error(f"Не удалось записать вопрос в CSV: {str(e)}")
-    
+
     def _load_from_google_sheets(self) -> pd.DataFrame:
         """Load knowledge base data from Google Sheets CSV URL."""
         # Set proper encoding for the request
         response = requests.get(self.google_sheets_csv_url, timeout=30)
         response.raise_for_status()
-        
+
         # Try to detect and fix encoding issues
         content = response.content
-        
+
         # Try different encodings
         text_content = None
         for encoding in ['utf-8', 'utf-8-sig', 'cp1251', 'latin1']:
@@ -151,14 +151,14 @@ class CSVManager:
                 break
             except UnicodeDecodeError:
                 continue
-        
+
         if text_content is None:
             text_content = content.decode('utf-8', errors='replace')
             logger.warning("Used utf-8 with error replacement")
-        
+
         # Debug: Log the raw response
         logger.info(f"Raw response content (first 500 chars): {text_content[:500]}")
-        
+
         # Parse CSV from response content with error handling
         from io import StringIO
         try:
@@ -174,59 +174,82 @@ class CSVManager:
                            sep=',',
                            quotechar='"',
                            skipinitialspace=True)
-        
+
         # Debug: Log dataframe info
         logger.info(f"Loaded DataFrame shape: {df.shape}")
         logger.info(f"DataFrame columns: {list(df.columns)}")
         if not df.empty:
             logger.info(f"First few rows:\n{df.head()}")
-        
+
         if df.empty:
             logger.warning("Google Sheets CSV is empty")
             return pd.DataFrame()
-        
+
         # Expected columns: Category, Question, Answer, Priority, Last Updated
         required_columns = ['Category', 'Question', 'Answer']
         missing_columns = [col for col in required_columns if col not in df.columns]
-        
+
         if missing_columns:
             logger.error(f"Missing required columns in Google Sheets: {missing_columns}")
             logger.error(f"Available columns: {list(df.columns)}")
             raise ValueError(f"Missing required columns: {missing_columns}")
-        
+
         # Clean and validate data
         df = self._clean_data(df)
-        
+
         return df
-    
+
+    def add_question_answer(self, question: str, answer: str, category: str = "AI_Generated"):
+        """Добавить новый вопрос и ответ в CSV файл."""
+        try:
+            # Создаем новую запись
+            new_entry = {
+                'Question': question,
+                'Answer': answer,
+                'Category': category,
+                'Source': 'AI_Generated'
+            }
+
+            # Добавляем в CSV
+            self.append_to_csv(new_entry)
+
+            # Обновляем кэш
+            self.refresh_cache()
+
+            logger.info(f"Добавлен новый вопрос в CSV: {question[:50]}...")
+            return True
+        except Exception as e:
+            logger.error(f"Ошибка при добавлении вопроса в CSV: {str(e)}")
+            return False
+
     def _clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Clean and validate the knowledge base data."""
         # Remove empty rows
         df = df.dropna(subset=['Question', 'Answer'])
-        
+
         # Remove rows with empty questions or answers
         df = df[df['Question'].str.strip() != '']
         df = df[df['Answer'].str.strip() != '']
-        
+
         # Convert Priority to numeric if it exists
         if 'Priority' in df.columns:
             df['Priority'] = pd.to_numeric(df['Priority'], errors='coerce')
             df['Priority'] = df['Priority'].fillna(5)  # Default priority
         else:
             df['Priority'] = 5  # Default priority for all
-        
+
         # Convert Last Updated to datetime if it exists
         if 'Last Updated' in df.columns:
             df['Last Updated'] = pd.to_datetime(df['Last Updated'], errors='coerce')
-        
+
         # Strip whitespace from text columns
         text_columns = ['Category', 'Question', 'Answer']
         for col in text_columns:
             if col in df.columns:
                 df[col] = df[col].astype(str).str.strip()
-        
+
         return df
-    
+
     def refresh_cache(self) -> None:
         """Force refresh of cached data."""
         logger.info("Forcing cache refresh")
@@ -234,29 +257,29 @@ class CSVManager:
         self.cache_time = None
         self.last_modified = None
         self.get_knowledge_base()
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """Get statistics about the knowledge base."""
         try:
             df = self.get_knowledge_base()
-            
+
             if df.empty:
                 return {"total_questions": 0, "categories": 0}
-            
+
             stats = {
                 "total_questions": len(df),
                 "categories": df['Category'].nunique() if 'Category' in df.columns else 0,
                 "last_updated": self.cache_time.isoformat() if self.cache_time else None,
                 "file_path": self.csv_file_path
             }
-            
+
             # Add category breakdown
             if 'Category' in df.columns:
                 category_counts = df['Category'].value_counts().to_dict()
                 stats["category_breakdown"] = category_counts
-            
+
             return stats
-            
+
         except Exception as e:
             logger.error(f"Failed to get knowledge base stats: {str(e)}")
             return {"error": str(e)}
