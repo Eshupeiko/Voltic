@@ -112,7 +112,7 @@ class TelegramBot:
                      "content": "Ты - профессиональный помощник электромонтера. Отвечай на вопросы по электротехнике точно, кратко и по делу на русском языке."},
                     {"role": "user", "content": user_question}
                 ],
-                model="llama-3.3-70b-versatile",
+                model="llama3-70b-8192",
                 temperature=0.3,
                 max_tokens=512
             )
