@@ -23,8 +23,8 @@ class TelegramBot:
         self.config = config
         self.csv_manager = CSVManager(config)
         self.question_matcher = QuestionMatcher(config)
-        self.application = None
-        self._setup_bot()
+        #self.application = None
+        #self._setup_bot()
         # Инициализация Groq клиента
         self.groq_api_key = config.groq_api_key or os.getenv("GROQ_API_KEY")
         self.groq_client = None
@@ -81,23 +81,34 @@ class TelegramBot:
 
     async def get_groq_response(self, user_question: str) -> str:
         """Получить ответ от Groq API."""
+        # Добавляем подробное логирование
+        logger.info(f"Получен запрос к Groq API: {user_question}")
+
         if not self.groq_client:
+            logger.error("Groq клиент не инициализирован")
             return "Извините, сервис ИИ временно недоступен."
 
+        if not self.groq_api_key:
+            logger.error("API ключ Groq не установлен")
+            return "Извините, конфигурация ИИ не завершена."
+
         try:
+            logger.info(f"Отправка запроса к модели: llama3-70b-8192")
             chat_completion = self.groq_client.chat.completions.create(
                 messages=[
                     {"role": "system",
-                     "content": "Ты - профессиональный помощник электромонтера. Отвечай на вопросы по электротехнике точно, кратко и по делу на русском языке. Если вопрос не относится к электротехнике, вежливо откажись отвечать."},
+                     "content": "Ты - профессиональный помощник электромонтера. Отвечай на вопросы по электротехнике точно, кратко и по делу на русском языке."},
                     {"role": "user", "content": user_question}
                 ],
-                model="meta-llama/llama-4-scout-17b-16e-instruct",  # Мощная модель для сложных вопросов
-                temperature=0.3,  # Низкая температура для более точных технических ответов
+                model="llama3-70b-8192",
+                temperature=0.3,
                 max_tokens=512
             )
-            return chat_completion.choices[0].message.content
+            response = chat_completion.choices[0].message.content
+            logger.info(f"Получен ответ от Groq API: {response[:100]}...")
+            return response
         except Exception as e:
-            logger.error(f"Ошибка при запросе к Groq API: {str(e)}")
+            logger.exception(f"КРИТИЧЕСКАЯ ОШИБКА при запросе к Groq API: {str(e)}")
             return "Извините, произошла ошибка при обработке вашего запроса."
     
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
