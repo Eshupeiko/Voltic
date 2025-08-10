@@ -8,6 +8,9 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from typing import List, Dict
 from groq import Groq
 import os
+os.environ["HTTP_PROXY"] = ""
+os.environ["HTTPS_PROXY"] = ""
+os.environ["NO_PROXY"] = "*"
 
 
 from .sheets_manager import CSVManager
@@ -30,10 +33,19 @@ class TelegramBot:
         self.groq_client = None
         if self.groq_api_key:
             try:
+                # Используем только поддерживаемые модели
                 self.groq_client = Groq(api_key=self.groq_api_key)
                 logger.info("Groq API успешно инициализирован")
+
+                # Дополнительная проверка работоспособности
+                try:
+                    self.groq_client.models.list()
+                    logger.info("Проверка моделей Groq прошла успешно")
+                except Exception as e:
+                    logger.warning(f"Предупреждение при проверке моделей: {str(e)}")
             except Exception as e:
                 logger.error(f"Не удалось инициализировать Groq API: {str(e)}")
+                logger.error(f"Тип ошибки: {type(e).__name__}")
 
         self.application = None
         self._setup_bot()
