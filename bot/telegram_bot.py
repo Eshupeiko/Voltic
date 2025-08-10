@@ -1,16 +1,14 @@
 """
 Телеграм-бот помощник электромонтера.
 """
+from groq import Groq
+import httpx
 import os
-os.environ["HTTP_PROXY"] = ""
-os.environ["HTTPS_PROXY"] = ""
-os.environ["NO_PROXY"] = "*"
-
 import logging #Модуль стандартной библиотеки Python для логирования событий
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ContextTypes
 from typing import List, Dict
-from groq import Groq
+
 
 
 from .sheets_manager import CSVManager
@@ -33,18 +31,20 @@ class TelegramBot:
         self.groq_client = None
         if self.groq_api_key:
             try:
-                # Используем только поддерживаемые модели
-                self.groq_client = Groq(api_key=self.groq_api_key)
+                self.groq_client = Groq(
+                    api_key=self.groq_api_key,
+                    http_client=httpx.Client(proxies=None)  # Отключаем прокси
+                )
                 logger.info("Groq API успешно инициализирован")
 
-                # Дополнительная проверка работоспособности
+                        # Проверка доступных моделей
                 try:
-                    self.groq_client.models.list()
-                    logger.info("Проверка моделей Groq прошла успешно")
+                    models = self.groq_client.models.list()
+                    logger.info(f"Доступные модели: {[m.id for m in models.data]}")
                 except Exception as e:
-                    logger.warning(f"Предупреждение при проверке моделей: {str(e)}")
+                    logger.warning(f"Ошибка проверки моделей: {str(e)}")
             except Exception as e:
-                logger.error(f"Не удалось инициализировать Groq API: {str(e)}")
+                logger.error(f"Ошибка инициализации Groq: {str(e)}")
                 logger.error(f"Тип ошибки: {type(e).__name__}")
 
         self.application = None
@@ -105,14 +105,14 @@ class TelegramBot:
             return "Извините, конфигурация ИИ не завершена."
 
         try:
-            logger.info(f"Отправка запроса к модели: llama3-70b-8192")
+            logger.info(f"Отправка запроса к модели: meta-llama/llama-4-scout-17b-16e-instruct")
             chat_completion = self.groq_client.chat.completions.create(
                 messages=[
                     {"role": "system",
                      "content": "Ты - профессиональный помощник электромонтера. Отвечай на вопросы по электротехнике точно, кратко и по делу на русском языке."},
                     {"role": "user", "content": user_question}
                 ],
-                model="llama3-70b-8192",
+                model="meta-llama/llama-4-scout-17b-16e-instruct",
                 temperature=0.3,
                 max_tokens=512
             )
