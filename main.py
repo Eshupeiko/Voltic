@@ -22,8 +22,11 @@ def main():
         config = Config()
         logger.info("Configuration loaded successfully")
         
-        # Start keep-alive server for Replit
-        #keep_alive()
+        # Start keep-alive server only for Replit (disabled for Railway)
+        if os.getenv('REPLIT_ENVIRONMENT'):
+            keep_alive()
+        else:
+            logger.info("Keep-alive disabled for Railway deployment")
         
         # Create and start the Telegram bot
         bot = TelegramBot(config)
