@@ -229,8 +229,8 @@ class CSVManager:
             import csv
             from datetime import datetime
             
-            # Стандартизированная схема колонок
-            standard_columns = ['Category', 'Question', 'Answer', 'Priority', 'Last Updated']
+            # Стандартизированная схема колонок (включая Source для совместимости)
+            standard_columns = ['Category', 'Question', 'Answer', 'Priority', 'Last Updated', 'Source']
             
             # Убеждаемся что все обязательные поля присутствуют
             normalized_entry = {}
