@@ -26,27 +26,39 @@ class TelegramBot:
         self.question_matcher = QuestionMatcher(config)
         #self.application = None
         #self._setup_bot()
-        # Инициализация Groq клиента
+        # Инициализация Groq клиента с детальным логированием
+        logger.info("Начинаем инициализацию Groq API...")
         self.groq_api_key = config.groq_api_key or os.getenv("GROQ_API_KEY")
+        logger.info(f"Получен API ключ Groq: {'***' + str(self.groq_api_key)[-4:] if self.groq_api_key else 'НЕ НАЙДЕН'}")
+        
         self.groq_client = None
         if self.groq_api_key:
             try:
-                # Инициализация Groq клиента только с API ключом (для Railway совместимости)
-                self.groq_client = Groq(
-                    api_key=self.groq_api_key,
-                    timeout=30.0
-                )
-                logger.info("Groq API успешно инициализирован")
-
-                        # Проверка доступных моделей
+                logger.info("Попытка создания Groq клиента...")
+                # Инициализация Groq клиента для Railway
+                self.groq_client = Groq(api_key=self.groq_api_key)
+                logger.info("Groq клиент создан успешно")
+                
+                # Проверка доступных моделей
                 try:
+                    logger.info("Проверяем доступные модели...")
                     models = self.groq_client.models.list()
                     logger.info(f"Доступные модели: {[m.id for m in models.data]}")
+                    logger.info("Groq API полностью инициализирован и готов к работе")
                 except Exception as e:
                     logger.warning(f"Ошибка проверки моделей: {str(e)}")
+                    logger.warning(f"Тип ошибки модели: {type(e).__name__}")
+                    # Клиент создан, но модели недоступны - оставляем клиент
+                    
             except Exception as e:
-                logger.error(f"Ошибка инициализации Groq: {str(e)}")
+                logger.error(f"КРИТИЧЕСКАЯ ОШИБКА инициализации Groq: {str(e)}")
                 logger.error(f"Тип ошибки: {type(e).__name__}")
+                logger.error(f"Детали ошибки: {repr(e)}")
+                self.groq_client = None
+        else:
+            logger.error("API ключ Groq не найден! Проверьте переменную окружения GROQ_API_KEY")
+            logger.error("Проверьте настройки в Railway Dashboard -> Variables")
+            logger.error("Убедитесь что переменная GROQ_API_KEY установлена правильно")
 
         self.application = None
         self._setup_bot()
@@ -94,11 +106,15 @@ class TelegramBot:
 
     async def get_groq_response(self, user_question: str) -> str:
         """Получить ответ от Groq API."""
-        # Добавляем подробное логирование
         logger.info(f"Получен запрос к Groq API: {user_question}")
 
+        # Детальная проверка состояния Groq
+        logger.info(f"Статус Groq клиента: {self.groq_client is not None}")
+        logger.info(f"Статус API ключа: {self.groq_api_key is not None}")
+        
         if not self.groq_client:
             logger.error("Groq клиент не инициализирован")
+            logger.error("Возможные причины: нет API ключа, ошибка при создании клиента, или проблемы с зависимостями")
             return "Извините, сервис ИИ временно недоступен."
 
         if not self.groq_api_key:
