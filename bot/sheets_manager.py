@@ -60,7 +60,7 @@ class CSVManager:
                 # Check if cached data is valid for Google Sheets
                 if self._is_cache_valid_for_google_sheets():
                     logger.debug("Using cached knowledge base data from Google Sheets")
-                    return self.data_cache
+                    return self.data_cache if self.data_cache is not None else pd.DataFrame()
 
                 logger.info("Loading knowledge base from Google Sheets CSV URL")
                 try:
@@ -77,7 +77,7 @@ class CSVManager:
             # Return cached data if valid for local file
             if self._is_cache_valid():
                 logger.debug("Using cached knowledge base data")
-                return self.data_cache
+                return self.data_cache if self.data_cache is not None else pd.DataFrame()
 
             # Fall back to local CSV file
             logger.info(f"Loading knowledge base from {self.csv_file_path}")
@@ -202,12 +202,13 @@ class CSVManager:
     def add_question_answer(self, question: str, answer: str, category: str = "AI_Generated"):
         """Добавить новый вопрос и ответ в CSV файл."""
         try:
-            # Создаем новую запись
+            # Создаем новую запись с правильными названиями колонок
             new_entry = {
                 'Question': question,
                 'Answer': answer,
                 'Category': category,
-                'Source': 'AI_Generated'
+                'Priority': 5,
+                'Last Updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
 
             # Добавляем в CSV
@@ -222,14 +223,51 @@ class CSVManager:
             logger.error(f"Ошибка при добавлении вопроса в CSV: {str(e)}")
             return False
 
+    def append_to_csv(self, entry: Dict[str, str]) -> None:
+        """Append a new entry to the CSV file."""
+        try:
+            import csv
+            from datetime import datetime
+            
+            # Стандартизированная схема колонок
+            standard_columns = ['Category', 'Question', 'Answer', 'Priority', 'Last Updated']
+            
+            # Убеждаемся что все обязательные поля присутствуют
+            normalized_entry = {}
+            for col in standard_columns:
+                if col in entry:
+                    normalized_entry[col] = entry[col]
+                elif col == 'Priority':
+                    normalized_entry[col] = entry.get('Priority', 5)
+                elif col == 'Last Updated':
+                    normalized_entry[col] = entry.get('Last Updated', 
+                                                      entry.get('Last_Updated', 
+                                                               datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+                else:
+                    normalized_entry[col] = entry.get(col, '')
+            
+            # Write to CSV file
+            file_exists = os.path.exists(self.csv_file_path)
+            with open(self.csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=standard_columns, extrasaction='ignore')
+                if not file_exists:
+                    writer.writeheader()
+                writer.writerow(normalized_entry)
+            
+            logger.info(f"Entry added to CSV: {entry.get('Question', 'Unknown')[:50]}...")
+            
+        except Exception as e:
+            logger.error(f"Failed to append to CSV: {str(e)}")
+            raise
+
     def _clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Clean and validate the knowledge base data."""
         # Remove empty rows
         df = df.dropna(subset=['Question', 'Answer'])
 
         # Remove rows with empty questions or answers
-        df = df[df['Question'].str.strip() != '']
-        df = df[df['Answer'].str.strip() != '']
+        df = df[df['Question'].str.strip() != ''].copy()
+        df = df[df['Answer'].str.strip() != ''].copy()
 
         # Convert Priority to numeric if it exists
         if 'Priority' in df.columns:
@@ -256,7 +294,10 @@ class CSVManager:
         self.data_cache = None
         self.cache_time = None
         self.last_modified = None
-        self.get_knowledge_base()
+        try:
+            self.get_knowledge_base()
+        except Exception as e:
+            logger.error(f"Failed to refresh cache: {str(e)}")
 
     def get_stats(self) -> Dict[str, Any]:
         """Get statistics about the knowledge base."""
